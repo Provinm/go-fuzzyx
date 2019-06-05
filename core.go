@@ -31,10 +31,14 @@ type Words struct {
 	info []Word
 }
 
+
+// TypeListWords 包含列表字符串的结构
+type TypeListWords map[string] map[string] [][]int 
+
 // ListWords 所有词汇组成的列表信息
 type ListWords struct {
 	words []string
-	info  []Words
+	info  TypeListWords
 }
 
 // InitialArgs 获取声母设置
@@ -98,15 +102,39 @@ func (ws *Words) AanlyzeWords() []Word {
 }
 
 // AanlyzeListWord 分析包含列表的字符串
-func (wl *ListWords) AanlyzeListWord() []Words {
+func (wl *ListWords) AanlyzeListWord() TypeListWords {
 
-	res := make([]Words, 0)
-	for _, val := range wl.words {
+	res := TypeListWords{}
+	for outidx, val := range wl.words {
 		NewWords := Words{}
 		NewWords.name = val
 		NewWords.info = NewWords.AanlyzeWords()
-		res = append(res, NewWords)
+		for idx, item := range NewWords.info {
+			word := item.info[0]
+			newItem := []int{outidx, idx, word.Tone}
+			if subCon, ok := res[word.Consonant]; ok {
+				 if subFinal, iok := subCon[word.Final]; iok {
+					 subFinal = append(subFinal, newItem)
+				 } else {
+					 temp := make([][]int, 0)
+					 temp = append(temp, newItem)
+					 subCon[word.Final] = temp
+				 }
+			} else {
+				temp := make([][]int, 0)
+				temp = append(temp, newItem)
+				newF := map[string] [][]int {word.Final:temp}
+				res[word.Consonant] = newF
+			}
+		}
 	}
-
 	return res
 }
+
+
+// TypeRes 结果
+type TypeRes []float32
+
+// func innerRank(words []string, word string) TypeRes {
+	 
+// }

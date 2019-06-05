@@ -23,5 +23,14 @@ func TestListWords(t *testing.T) {
 	lw := ListWords{}
 	lw.words = []string{"张三", "李四"}
 	lw.info = lw.AanlyzeListWord()
-	fmt.Println(lw.info)
+
+	for key, val := range lw.info {
+		fmt.Println(key)
+		for _k, _v := range val {
+			fmt.Println(_k)
+			for _, _val := range _v {
+				fmt.Println(_val)
+			}
+		}
+	}
 }
