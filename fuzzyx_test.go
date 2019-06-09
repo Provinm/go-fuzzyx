@@ -34,3 +34,13 @@ func TestListWords(t *testing.T) {
 		}
 	}
 }
+
+
+func TestInitialRank(t *testing.T) {
+	fmt.Println(InitialRank)
+}
+
+
+func TestFinalRank(t *testing.T) {
+	fmt.Println(FinalRank)
+}
