@@ -1,6 +1,7 @@
 package fuzzyx
 
 import (
+	"sort"
 	"math"
 	"strconv"
 
@@ -137,10 +138,13 @@ func (wl *ListWords) AanlyzeListWord() TypeListWords {
 // TypeRes 结果
 type TypeRes []float64
 
-func revertIndex(w *Words, wl TypeListWords) []int {
+func revertIndexRank(w Words, wl TypeListWords, top int) []int {
 
 	// res := make([]int, 0)
-	mapping := make(map[int]float64)
+
+	// outterIndex: innerIndex: rank
+	// mapping := make(map[int]map[int]float64) 
+	mapping := make(map[int]int)
 	for _, word := range w.info {
 		for _, wd := range word.info {
 			c, f := wd.Consonant, wd.Final
@@ -148,16 +152,40 @@ func revertIndex(w *Words, wl TypeListWords) []int {
 			for idx, r := range allres {
 				rank := float64(totalranks[idx])
 				for _, temp := range r {
-					if temp[2] != wd.Tone {
+
+					outIndex, tone := temp[0], temp[2]
+					if tone != wd.Tone {
 						rank *= 0.9
 					}
-
+					if innerMap, ok := mapping[outIndex]; ok {
+						mapping[outIndex] += innerMap
+					} else {
+						mapping[outIndex] = 1
+					}
 				}
 			}
 		}
 	}
-}
 
+	forSort := make([]int, 0)
+	valueKeyMapping := make(map[int]int)
+
+	for out, in := range mapping{
+		forSort = append(forSort, in)
+		valueKeyMapping[in] = out
+	}
+
+	sort.Ints(forSort)
+	forSort = forSort[:top]
+
+	res := make([]int, 0)
+
+	for _, item := range forSort {
+		res = append(res, valueKeyMapping[item])
+	}
+
+	return res
+}
 
 
 // initialMatch 计算声母韵母与倒排索引结构结果
@@ -196,8 +224,8 @@ func finalMatch(f string, fin TypeFinal) ([]int, [][][]int) {
 
 
 // livenstein
-func livenstein(w1 *Words, w2 *Words) float64 {
-	var res float64
+func livenstein(w1 Words, w2 Words) float64 {
+	// var res float64
 	var length, width int
 
 	if len(w1.info) >= len(w2.info) {
@@ -213,7 +241,7 @@ func livenstein(w1 *Words, w2 *Words) float64 {
 
 
 	for rowIdx, row := range matrix {
-		for colIdx, col := range row {
+		for colIdx, _ := range row {
 			if rowIdx == 0 {
 				matrix[rowIdx][rowIdx] = float64(colIdx)
 			} else if colIdx == 0 {
@@ -262,4 +290,41 @@ func getEditSpace(w1 AanlyzedWord, w2 AanlyzedWord) float64 {
 	res := (iniRank * finRank * typeRank) / 10000
 	return res
 
+}
+
+
+func fuzzyx(w1 string, wl []string, top int) map[string]float64 {
+
+	words := Words{}
+	words.name = w1
+	words.info = words.AanlyzeWords()
+
+	lw := ListWords{}
+	lw.words = wl
+	lw.info = lw.AanlyzeListWord()
+
+	reversIndexRes := revertIndexRank(words, lw.info, top)
+
+	ranks := make(map[float64]int)
+	forSort := make([]float64, 0)
+
+	w2 := Words{}
+	for _, idx := range reversIndexRes {
+		w2.name = wl[idx]
+		w2.info = w2.AanlyzeWords()
+		editSpaceRes := livenstein(words, w2)
+
+		ranks[editSpaceRes] = idx
+		forSort = append(forSort, editSpaceRes)
+	}
+
+	sort.Float64s(forSort)
+
+	res := make(map[string] float64)
+	for _, f := range forSort {
+		idx := ranks[f]
+		res[wl[idx]] = f
+	}
+
+	return res
 }
