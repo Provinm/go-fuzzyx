@@ -49,8 +49,9 @@ func TestFinalRank(t *testing.T) {
 func TestFuzzyx(t *testing.T) {
 
 	w1 := "张三"
-	wl := []string {"张三", "李四"}
+	wl := []string {"张三", "李四", "章三", "掌山"}
 
 	res := fuzzyx(w1, wl, 10)
-	fmt.Println(res)
+	// fmt.Println(res)
+	t.Log(res)
 }

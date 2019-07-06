@@ -1,6 +1,7 @@
 package fuzzyx
 
 import (
+	"fmt"
 	"sort"
 	"math"
 	"strconv"
@@ -176,6 +177,10 @@ func revertIndexRank(w Words, wl TypeListWords, top int) []int {
 	}
 
 	sort.Ints(forSort)
+	length := len(forSort)
+	if length < top {
+		top = length
+	}
 	forSort = forSort[:top]
 
 	res := make([]int, 0)
@@ -239,20 +244,19 @@ func livenstein(w1 Words, w2 Words) float64 {
 		matrix[i] = make([]float64, length+1)
 	}
 
-
 	for rowIdx, row := range matrix {
-		for colIdx, _ := range row {
+		for colIdx := range row {
 			if rowIdx == 0 {
-				matrix[rowIdx][rowIdx] = float64(colIdx)
+				matrix[rowIdx][colIdx] = float64(colIdx)
 			} else if colIdx == 0 {
-				matrix[colIdx][colIdx] = float64(rowIdx)
+				matrix[rowIdx][colIdx] = float64(rowIdx)
 			} else {
-				matrix[colIdx][colIdx] = math.Min(
+				matrix[rowIdx][colIdx] = math.Min(
 					math.Min(
 						matrix[rowIdx-1][rowIdx]+1.0,
 						matrix[rowIdx][rowIdx-1]+1.0,
 					),
-					getEditSpace(w1.info[colIdx].info[0], w2.info[rowIdx].info[0]),
+					getEditSpace(w1.info[colIdx-1].info[0], w2.info[rowIdx-1].info[0]),
 				)
 			}
 		}
